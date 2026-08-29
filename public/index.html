@@ -153,41 +153,15 @@ RESET 90日卒業プログラム
   </div>
 
   <script>
-   async function approvePost() {
-  const caption = document.querySelector("textarea").value;
+   <script>
+function approvePost() {
+  alert("承認ボタン動作OK");
+}
 
-  const imageUrl = "https://reset-sns-autopilot.vercel.app/reset-plan.png";
-     
-  try {
-    const response = await fetch("/api/publish", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        imageUrl,
-        caption,
-      }),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error(result);
-      alert("投稿に失敗しました");
-      return;
-    }
-
-    alert("Instagramへの投稿が完了しました");
-  } catch (error) {
-    console.error(error);
-    alert("通信エラーが発生しました");
-  }
-｝
-
-    function rejectPost() {
-      alert("投稿を修正・却下しました");
-    }
+function rejectPost() {
+  alert("投稿を修正・却下しました");
+}
+</script>
   </script>
 
 </body>
