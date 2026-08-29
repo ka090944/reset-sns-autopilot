@@ -136,9 +136,9 @@ RESETは、ずっとパーソナルジムに通い続けることを目的にし
 RESET 90日卒業プログラム
       </textarea>
 
-      <button class="approve" onclick="alert('ボタンOK')">
+  <button class="approve" onclick="approvePost()">
   ✓ 投稿を承認
-　　　 </button>
+</button>
 
       <button class="reject" onclick="rejectPost()">
         修正・却下
@@ -153,15 +153,43 @@ RESET 90日卒業プログラム
   </div>
 
   <script>
-   <script>
-function approvePost() {
-  alert("承認ボタン動作OK");
+async function approvePost() {
+  alert("投稿処理を開始します");
+
+  const caption = document.querySelector("textarea").value;
+  const imageUrl = "https://reset-sns-autopilot.vercel.app/reset-plan.png";
+
+  try {
+    const response = await fetch("/api/publish", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        imageUrl: imageUrl,
+        caption: caption
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error(result);
+      alert("投稿に失敗しました");
+      return;
+    }
+
+    alert("Instagramへの投稿が完了しました");
+
+  } catch (error) {
+    console.error(error);
+    alert("通信エラーが発生しました");
+  }
 }
 
 function rejectPost() {
   alert("投稿を修正・却下しました");
 }
-</script>
   </script>
 
 </body>
