@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RESET SNS AUTOPILOT</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #0b0b0b;
+      color: #ffffff;
+      font-family: Arial, "Noto Sans JP", sans-serif;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 50px 20px;
+    }
+
+    h1 {
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #999;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: #151515;
+      border: 1px solid #333;
+      border-radius: 14px;
+      padding: 25px;
+      margin-bottom: 20px;
+    }
+
+    .label {
+      color: #aaa;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    textarea,
+    input {
+      width: 100%;
+      background: #0d0d0d;
+      border: 1px solid #444;
+      color: white;
+      padding: 14px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+
+    .approve {
+      background: #ffffff;
+      color: #000000;
+    }
+
+    .reject {
+      background: #292929;
+      color: #ffffff;
+    }
+
+    .status {
+      display: inline-block;
+      background: #292929;
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    .footer {
+      margin-top: 40px;
+      color: #666;
+      font-size: 12px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>RESET SNS AUTOPILOT</h1>
+    <div class="subtitle">
+      Instagram / Threads 投稿管理
+    </div>
+
+    <div class="status">
+      承認待ち
+    </div>
+
+    <div class="card">
+
+      <div class="label">プラットフォーム</div>
+      <input value="Instagram">
+
+      <div class="label">投稿予定</div>
+      <input type="datetime-local">
+
+      <div class="label">投稿内容</div>
+
+      <textarea>
+「教えられる」から「自立する」へ。
+
+RESETは、ずっとパーソナルジムに通い続けることを目的にしていません。
+
+トレーニング・食事・生活習慣を90日間で学び、
+最終的には自分自身で身体を管理できる状態を目指します。
+
+90日後、自分で続けられる身体づくりを。
+
+RESET 90日卒業プログラム
+      </textarea>
+
+      <button class="approve" onclick="approvePost()">
+        ✓ 投稿を承認
+      </button>
+
+      <button class="reject" onclick="rejectPost()">
+        修正・却下
+      </button>
+
+    </div>
+
+    <div class="footer">
+      RESET SNS AUTOMATION SYSTEM
+    </div>
+
+  </div>
+
+  <script>
+    function approvePost() {
+      alert("投稿を承認しました");
+    }
+
+    function rejectPost() {
+      alert("投稿を修正・却下しました");
+    }
+  </script>
+
+</body>
+</html>
