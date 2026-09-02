@@ -173,11 +173,11 @@ async function approvePost() {
 
     const result = await response.json();
 
-    if (!response.ok) {
-      console.error(result);
-      alert("投稿に失敗しました");
-      return;
-    }
+ if (!response.ok) {
+  console.error(result);
+  alert("投稿に失敗しました\n\n" + JSON.stringify(result, null, 2));
+  return;
+}
 
     alert("Instagramへの投稿が完了しました");
 
