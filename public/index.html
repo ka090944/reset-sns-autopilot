@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RESET SNS AUTOPILOT</title>
 
   <style>
@@ -18,26 +18,26 @@
     }
 
     .container {
-      max-width: 900px;
+      max-width: 700px;
       margin: 0 auto;
-      padding: 50px 20px;
+      padding: 40px 20px;
     }
 
     h1 {
-      font-size: 30px;
-      margin-bottom: 8px;
+      font-size: 28px;
+      margin-bottom: 5px;
     }
 
     .subtitle {
       color: #999;
-      margin-bottom: 40px;
+      margin-bottom: 30px;
     }
 
     .card {
       background: #151515;
       border: 1px solid #333;
-      border-radius: 14px;
-      padding: 25px;
+      border-radius: 16px;
+      padding: 20px;
       margin-bottom: 20px;
     }
 
@@ -47,52 +47,58 @@
       margin-bottom: 8px;
     }
 
-    textarea,
-    input {
+    textarea {
       width: 100%;
+      min-height: 260px;
       background: #0d0d0d;
       border: 1px solid #444;
+      border-radius: 10px;
       color: white;
       padding: 14px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-    }
-
-    textarea {
-      min-height: 180px;
+      font-size: 15px;
+      line-height: 1.7;
       resize: vertical;
+      margin-top: 10px;
     }
 
     button {
+      width: 100%;
       border: 0;
-      border-radius: 8px;
-      padding: 12px 20px;
+      border-radius: 10px;
+      padding: 15px;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
-      margin-right: 8px;
+      margin-top: 10px;
     }
 
-    .approve {
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .generate {
       background: #ffffff;
       color: #000000;
     }
 
-    .reject {
-      background: #292929;
-      color: #ffffff;
+    .approve {
+      background: #22c55e;
+      color: #000000;
     }
 
     .status {
       display: inline-block;
-      background: #292929;
+      background: #222;
       border-radius: 20px;
       padding: 6px 12px;
       font-size: 12px;
+      color: #ccc;
       margin-bottom: 20px;
     }
 
     .footer {
-      margin-top: 40px;
+      margin-top: 30px;
       color: #666;
       font-size: 12px;
       text-align: center;
@@ -105,91 +111,190 @@
   <div class="container">
 
     <h1>RESET SNS AUTOPILOT</h1>
-    <div class="subtitle">
-      Instagram / Threads 投稿管理
-    </div>
+    <div class="subtitle">AI × 承認型 SNS 自動運用</div>
 
-    <div class="status">
-      承認待ち
+    <div class="status" id="status">
+      投稿案を生成してください
     </div>
 
     <div class="card">
 
-      <div class="label">プラットフォーム</div>
-      <input value="Instagram">
+      <div class="label">STEP 1</div>
+      <h2>AIで投稿案を生成</h2>
 
-      <div class="label">投稿予定</div>
-      <input type="datetime-local">
+      <button
+        id="generateBtn"
+        class="generate"
+        onclick="generatePost()"
+      >
+        AIで投稿案を生成
+      </button>
 
-      <div class="label">投稿内容</div>
+    </div>
 
-      <textarea>
-「教えられる」から「自立する」へ。
+    <div class="card">
 
-RESETは、ずっとパーソナルジムに通い続けることを目的にしていません。
+      <div class="label">STEP 2</div>
+      <h2>投稿内容を確認・編集</h2>
 
-トレーニング・食事・生活習慣を90日間で学び、
-最終的には自分自身で身体を管理できる状態を目指します。
+      <textarea
+        id="caption"
+        placeholder="ここにAIが生成した投稿文が表示されます。生成後に自由に修正できます。"
+      ></textarea>
 
-90日後、自分で続けられる身体づくりを。
+    </div>
 
-RESET 90日卒業プログラム
-      </textarea>
+    <div class="card">
 
-  <button class="approve" onclick="approvePost()">
-  ✓ 投稿を承認
-</button>
+      <div class="label">STEP 3</div>
+      <h2>Instagramへ投稿</h2>
 
-      <button class="reject" onclick="rejectPost()">
-        修正・却下
+      <button
+        id="approveBtn"
+        class="approve"
+        onclick="approvePost()"
+      >
+        投稿を承認
       </button>
 
     </div>
 
     <div class="footer">
-      RESET SNS AUTOMATION SYSTEM
+      RESET SNS AUTOPILOT SYSTEM
     </div>
 
   </div>
 
   <script>
-async function approvePost() {
-  alert("投稿処理を開始します");
 
-  const caption = document.querySelector("textarea").value;
-  const imageUrl = "https://reset-sns-autopilot.vercel.app/reset-plan.png";
+    async function generatePost() {
 
-  try {
-    const response = await fetch("/api/publish", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        imageUrl: imageUrl,
-        caption: caption
-      })
-    });
+      const button = document.getElementById("generateBtn");
+      const caption = document.getElementById("caption");
+      const status = document.getElementById("status");
 
-    const result = await response.json();
+      button.disabled = true;
+      button.textContent = "AI生成中...";
+      status.textContent = "投稿案を生成しています...";
 
- if (!response.ok) {
-  console.error(result);
-  alert("投稿に失敗しました\n\n" + JSON.stringify(result, null, 2));
-  return;
-}
+      try {
 
-    alert("Instagramへの投稿が完了しました");
+        const response = await fetch("/api/generate", {
+          method: "POST"
+        });
 
-  } catch (error) {
-    console.error(error);
-    alert("通信エラーが発生しました");
-  }
-}
+        const result = await response.json();
 
-function rejectPost() {
-  alert("投稿を修正・却下しました");
-}
+        if (!response.ok) {
+          console.error(result);
+
+          alert(
+            "投稿案の生成に失敗しました\n\n" +
+            JSON.stringify(result, null, 2)
+          );
+
+          status.textContent = "生成エラー";
+          return;
+        }
+
+        caption.value = result.caption;
+
+        status.textContent = "投稿案を生成しました。内容を確認してください。";
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "投稿案の生成に失敗しました\n\n" +
+          error.message
+        );
+
+        status.textContent = "生成エラー";
+
+      } finally {
+
+        button.disabled = false;
+        button.textContent = "AIで投稿案を生成";
+
+      }
+    }
+
+
+    async function approvePost() {
+
+      const button = document.getElementById("approveBtn");
+      const caption = document.getElementById("caption").value.trim();
+      const status = document.getElementById("status");
+
+      if (!caption) {
+        alert("投稿文がありません。先にAIで投稿案を生成してください。");
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = "投稿中...";
+      status.textContent = "Instagramへ投稿しています...";
+
+      const imageUrl =
+        "https://reset-sns-autopilot.vercel.app/reset-plan.png";
+
+      try {
+
+        const response = await fetch("/api/publish", {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json"
+          },
+
+          body: JSON.stringify({
+            imageUrl,
+            caption
+          })
+
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+
+          console.error(result);
+
+          alert(
+            "投稿に失敗しました\n\n" +
+            JSON.stringify(result, null, 2)
+          );
+
+          status.textContent = "投稿エラー";
+          return;
+        }
+
+        alert("Instagramへの投稿が完了しました！");
+
+        status.textContent = "Instagram投稿完了";
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "投稿に失敗しました\n\n" +
+          error.message
+        );
+
+        status.textContent = "投稿エラー";
+
+      } finally {
+
+        button.disabled = false;
+        button.textContent = "投稿を承認";
+
+      }
+
+    }
+
   </script>
 
 </body>
