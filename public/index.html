@@ -105,20 +105,6 @@
       font-size: 12px;
       margin-top: 30px;
     }
-
-    @media (max-width: 600px) {
-      .container {
-        padding: 20px 14px;
-      }
-
-      h1 {
-        font-size: 23px;
-      }
-
-      .card {
-        padding: 16px;
-      }
-    }
   </style>
 </head>
 
@@ -160,10 +146,7 @@
     <div class="label">STEP 3</div>
     <h2>投稿を実行</h2>
 
-    <button
-      id="publishBtn"
-      onclick="publishPost()"
-    >
+    <button id="publishBtn" onclick="publishPost()">
       投稿を承認
     </button>
   </div>
@@ -174,148 +157,206 @@
 
 </div>
 
-<script type="module">
+<script>
 
-  import { upload } from
-    "https://esm.sh/@vercel/blob/client";
+const imageFile = document.getElementById("imageFile");
+const preview = document.getElementById("preview");
 
-  const imageFile =
-    document.getElementById("imageFile");
+imageFile.addEventListener("change", () => {
+  const file = imageFile.files[0];
 
-  const preview =
-    document.getElementById("preview");
+  if (!file) {
+    preview.style.display = "none";
+    return;
+  }
 
-  imageFile.addEventListener("change", () => {
-
-    const file = imageFile.files[0];
-
-    if (!file) {
-      preview.style.display = "none";
-      return;
-    }
-
-    preview.src = URL.createObjectURL(file);
-    preview.style.display = "block";
-
-  });
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = "block";
+});
 
 
-  window.publishPost = async function () {
+async function compressImage(file) {
 
-    const caption =
-      document.getElementById("caption").value.trim();
+  const imageBitmap = await createImageBitmap(file);
 
-    const file =
-      imageFile.files[0];
+  let width = imageBitmap.width;
+  let height = imageBitmap.height;
 
-    const button =
-      document.getElementById("publishBtn");
+  const maxSize = 1600;
 
-    const status =
-      document.getElementById("status");
+  if (width > maxSize || height > maxSize) {
 
-    if (!caption) {
-      alert("投稿文を入力してください");
-      return;
-    }
-
-    if (!file) {
-      alert("投稿する画像を選択してください");
-      return;
-    }
-
-    const confirmed = confirm(
-      "この内容でInstagramに投稿しますか？"
+    const ratio = Math.min(
+      maxSize / width,
+      maxSize / height
     );
 
-    if (!confirmed) {
+    width = Math.round(width * ratio);
+    height = Math.round(height * ratio);
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.drawImage(
+    imageBitmap,
+    0,
+    0,
+    width,
+    height
+  );
+
+  const blob = await new Promise((resolve) => {
+    canvas.toBlob(
+      resolve,
+      "image/jpeg",
+      0.82
+    );
+  });
+
+  return blob;
+}
+
+
+async function publishPost() {
+
+  const caption =
+    document.getElementById("caption").value.trim();
+
+  const file =
+    imageFile.files[0];
+
+  const button =
+    document.getElementById("publishBtn");
+
+  const status =
+    document.getElementById("status");
+
+  if (!caption) {
+    alert("投稿文を入力してください");
+    return;
+  }
+
+  if (!file) {
+    alert("投稿する画像を選択してください");
+    return;
+  }
+
+  const confirmed = confirm(
+    "この内容でInstagramに投稿しますか？"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  button.disabled = true;
+
+  try {
+
+    status.textContent = "画像を圧縮しています...";
+    button.textContent = "画像処理中...";
+
+    const compressedBlob =
+      await compressImage(file);
+
+    status.textContent = "画像をアップロードしています...";
+    button.textContent = "画像アップロード中...";
+
+    const uploadResponse = await fetch("/api/upload", {
+      method: "POST",
+      headers: {
+        "Content-Type": "image/jpeg",
+        "X-File-Name": "instagram-image.jpg"
+      },
+      body: compressedBlob
+    });
+
+    const uploadResult =
+      await uploadResponse.json();
+
+    if (!uploadResponse.ok) {
+
+      console.error(uploadResult);
+
+      alert(
+        "画像アップロードに失敗しました\n\n" +
+        JSON.stringify(uploadResult, null, 2)
+      );
+
+      status.textContent = "画像アップロードエラー";
+
       return;
     }
 
-    button.disabled = true;
+    const imageUrl = uploadResult.url;
 
-    try {
+    status.textContent = "Instagramへ投稿しています...";
+    button.textContent = "Instagram投稿中...";
 
-      /* STEP 1：画像アップロード */
+    const publishResponse = await fetch("/api/publish", {
 
-      button.textContent = "画像アップロード中...";
-      status.textContent = "画像をアップロードしています...";
+      method: "POST",
 
-      const blob = await upload(
-        `instagram/${Date.now()}-${file.name}`,
-        file,
-        {
-          access: "public",
-          handleUploadUrl: "/api/upload"
-        }
-      );
+      headers: {
+        "Content-Type": "application/json"
+      },
 
+      body: JSON.stringify({
+        imageUrl,
+        caption
+      })
 
-      /* STEP 2：Instagram投稿 */
+    });
 
-      button.textContent = "Instagram投稿中...";
-      status.textContent = "Instagramへ投稿しています...";
+    const publishResult =
+      await publishResponse.json();
 
-      const response = await fetch("/api/publish", {
+    if (!publishResponse.ok) {
 
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-          imageUrl: blob.url,
-          caption: caption
-        })
-
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-
-        console.error(result);
-
-        alert(
-          "Instagram投稿に失敗しました\n\n" +
-          JSON.stringify(result, null, 2)
-        );
-
-        status.textContent = "投稿エラー";
-
-        return;
-      }
-
-      alert("Instagramへの投稿が完了しました！");
-
-      status.textContent = "Instagram投稿完了";
-
-      document.getElementById("caption").value = "";
-      imageFile.value = "";
-
-      preview.src = "";
-      preview.style.display = "none";
-
-    } catch (error) {
-
-      console.error(error);
+      console.error(publishResult);
 
       alert(
-        "処理に失敗しました\n\n" +
-        error.message
+        "Instagram投稿に失敗しました\n\n" +
+        JSON.stringify(publishResult, null, 2)
       );
 
-      status.textContent = "エラー";
+      status.textContent = "投稿エラー";
 
-    } finally {
-
-      button.disabled = false;
-      button.textContent = "投稿を承認";
-
+      return;
     }
 
-  };
+    alert("Instagramへの投稿が完了しました！");
+
+    status.textContent = "Instagram投稿完了";
+
+    document.getElementById("caption").value = "";
+    imageFile.value = "";
+
+    preview.src = "";
+    preview.style.display = "none";
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "処理に失敗しました\n\n" +
+      error.message
+    );
+
+    status.textContent = "エラー";
+
+  } finally {
+
+    button.disabled = false;
+    button.textContent = "投稿を承認";
+
+  }
+}
 
 </script>
 
