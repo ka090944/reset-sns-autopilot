@@ -6,9 +6,7 @@
   <title>RESET SNS AUTOPILOT</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -20,16 +18,17 @@
     .container {
       max-width: 700px;
       margin: 0 auto;
-      padding: 40px 20px;
+      padding: 30px 16px;
     }
 
     h1 {
+      font-size: 26px;
       margin-bottom: 5px;
     }
 
     .subtitle {
       color: #888;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
     }
 
     .card {
@@ -37,30 +36,40 @@
       border: 1px solid #333;
       border-radius: 16px;
       padding: 20px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .label {
-      font-size: 13px;
+      font-size: 12px;
       color: #999;
       margin-bottom: 8px;
     }
 
-    textarea,
-    input {
+    textarea {
       width: 100%;
+      min-height: 250px;
       background: #0d0d0d;
       color: #fff;
       border: 1px solid #444;
       border-radius: 10px;
       padding: 14px;
-      font-size: 15px;
-    }
-
-    textarea {
-      min-height: 280px;
+      font-size: 16px;
       line-height: 1.7;
       resize: vertical;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      margin-top: 10px;
+      color: #fff;
+      font-size: 16px;
+    }
+
+    #preview {
+      display: none;
+      width: 100%;
+      margin-top: 18px;
+      border-radius: 12px;
     }
 
     button {
@@ -77,11 +86,12 @@
 
     button:disabled {
       opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .status {
-      background: #222;
       display: inline-block;
+      background: #222;
       padding: 7px 12px;
       border-radius: 20px;
       color: #ccc;
@@ -94,6 +104,20 @@
       text-align: center;
       font-size: 12px;
       margin-top: 30px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px 14px;
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+
+      .card {
+        padding: 16px;
+      }
     }
   </style>
 </head>
@@ -124,11 +148,12 @@
     <h2>投稿画像</h2>
 
     <input
-      id="imageUrl"
-      type="text"
-      value="https://reset-sns-autopilot.vercel.app/reset-plan.png"
-      placeholder="画像URL"
+      type="file"
+      id="imageFile"
+      accept="image/jpeg,image/png,image/webp"
     >
+
+    <img id="preview" alt="画像プレビュー">
   </div>
 
   <div class="card">
@@ -149,101 +174,148 @@
 
 </div>
 
-<script>
+<script type="module">
 
-async function publishPost() {
+  import { upload } from
+    "https://esm.sh/@vercel/blob/client";
 
-  const caption =
-    document.getElementById("caption").value.trim();
+  const imageFile =
+    document.getElementById("imageFile");
 
-  const imageUrl =
-    document.getElementById("imageUrl").value.trim();
+  const preview =
+    document.getElementById("preview");
 
-  const button =
-    document.getElementById("publishBtn");
+  imageFile.addEventListener("change", () => {
 
-  const status =
-    document.getElementById("status");
+    const file = imageFile.files[0];
 
-  if (!caption) {
-    alert("投稿文を入力してください");
-    return;
-  }
-
-  if (!imageUrl) {
-    alert("画像URLを入力してください");
-    return;
-  }
-
-  const confirmed = confirm(
-    "この内容でInstagramに投稿しますか？"
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  button.disabled = true;
-  button.textContent = "投稿中...";
-
-  status.textContent =
-    "Instagramへ投稿しています...";
-
-  try {
-
-    const response = await fetch("/api/publish", {
-
-      method: "POST",
-
-      headers: {
-        "Content-Type": "application/json"
-      },
-
-      body: JSON.stringify({
-        imageUrl,
-        caption
-      })
-
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-
-      console.error(result);
-
-      alert(
-        "投稿に失敗しました\n\n" +
-        JSON.stringify(result, null, 2)
-      );
-
-      status.textContent = "投稿エラー";
-
+    if (!file) {
+      preview.style.display = "none";
       return;
     }
 
-    alert("Instagramへの投稿が完了しました！");
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
 
-    status.textContent = "投稿完了";
+  });
 
-  } catch (error) {
 
-    console.error(error);
+  window.publishPost = async function () {
 
-    alert(
-      "投稿に失敗しました\n\n" +
-      error.message
+    const caption =
+      document.getElementById("caption").value.trim();
+
+    const file =
+      imageFile.files[0];
+
+    const button =
+      document.getElementById("publishBtn");
+
+    const status =
+      document.getElementById("status");
+
+    if (!caption) {
+      alert("投稿文を入力してください");
+      return;
+    }
+
+    if (!file) {
+      alert("投稿する画像を選択してください");
+      return;
+    }
+
+    const confirmed = confirm(
+      "この内容でInstagramに投稿しますか？"
     );
 
-    status.textContent = "投稿エラー";
+    if (!confirmed) {
+      return;
+    }
 
-  } finally {
+    button.disabled = true;
 
-    button.disabled = false;
-    button.textContent = "投稿を承認";
+    try {
 
-  }
-}
+      /* STEP 1：画像アップロード */
+
+      button.textContent = "画像アップロード中...";
+      status.textContent = "画像をアップロードしています...";
+
+      const blob = await upload(
+        `instagram/${Date.now()}-${file.name}`,
+        file,
+        {
+          access: "public",
+          handleUploadUrl: "/api/upload"
+        }
+      );
+
+
+      /* STEP 2：Instagram投稿 */
+
+      button.textContent = "Instagram投稿中...";
+      status.textContent = "Instagramへ投稿しています...";
+
+      const response = await fetch("/api/publish", {
+
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          imageUrl: blob.url,
+          caption: caption
+        })
+
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+
+        console.error(result);
+
+        alert(
+          "Instagram投稿に失敗しました\n\n" +
+          JSON.stringify(result, null, 2)
+        );
+
+        status.textContent = "投稿エラー";
+
+        return;
+      }
+
+      alert("Instagramへの投稿が完了しました！");
+
+      status.textContent = "Instagram投稿完了";
+
+      document.getElementById("caption").value = "";
+      imageFile.value = "";
+
+      preview.src = "";
+      preview.style.display = "none";
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "処理に失敗しました\n\n" +
+        error.message
+      );
+
+      status.textContent = "エラー";
+
+    } finally {
+
+      button.disabled = false;
+      button.textContent = "投稿を承認";
+
+    }
+
+  };
 
 </script>
 
