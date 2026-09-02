@@ -19,7 +19,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-5.4-mini",
+      model: "gpt-5.6-luna",
         input: `
 あなたはパーソナルジム「RESET」のSNSマーケティング担当です。
 
