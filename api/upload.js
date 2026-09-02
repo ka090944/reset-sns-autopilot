@@ -1,39 +1,42 @@
-import { handleUpload } from "@vercel/blob/client";
-
-export default async function handler(request, response) {
-  if (request.method !== "POST") {
-    return response.status(405).json({ error: "POST only" });
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "POST only" });
   }
 
   try {
-    const body = request.body;
+    const { put } = await import("@vercel/blob");
 
-    const jsonResponse = await handleUpload({
-      body,
-      request,
+    const contentType =
+      req.headers["content-type"] || "image/jpeg";
 
-      onBeforeGenerateToken: async () => {
-        return {
-          allowedContentTypes: [
-            "image/jpeg",
-            "image/png",
-            "image/webp"
-          ],
-          addRandomSuffix: true
-        };
-      },
+    const originalName =
+      req.headers["x-file-name"] || "instagram-image.jpg";
 
-      onUploadCompleted: async ({ blob }) => {
-        console.log("Upload completed:", blob.url);
+    const safeName = originalName
+      .replace(/[^a-zA-Z0-9._-]/g, "_");
+
+    const pathname =
+      `instagram/${Date.now()}-${safeName}`;
+
+    const blob = await put(
+      pathname,
+      req,
+      {
+        access: "public",
+        contentType,
+        addRandomSuffix: true
       }
-    });
+    );
 
-    return response.status(200).json(jsonResponse);
+    return res.status(200).json({
+      success: true,
+      url: blob.url
+    });
 
   } catch (error) {
     console.error(error);
 
-    return response.status(400).json({
+    return res.status(500).json({
       error: error.message
     });
   }
